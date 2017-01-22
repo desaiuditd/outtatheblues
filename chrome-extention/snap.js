@@ -373,3 +373,201 @@ function takeSnap() {
     }
   });
 }
+
+
+
+function snapAlexaPhoto(stream) {
+  context.drawImage(video, 0, 0, 640, 480);
+
+  var base64 = canvas.toDataURL();
+  var blob = window.dataURLtoBlob(base64);
+
+  var options = {
+    headers:{
+      'Content-Type': 'application/json',
+      'app_id': '58e3e573',
+      'app_key': 'cec849b17e94729ce0c7fcde30467808'
+    },
+    data: JSON.stringify({
+      image: base64,                                              //After picture is taken, image data is set on the facial recognition API
+      gallery_name: 'hack-ucsc'
+    }),
+    method: 'post',
+    dataType: 'json',
+    contentType: "application/json",
+    success: function(data, status, xhr) {
+      if (data.Errors) {
+        ref.child("Read").set("noPerson");
+      } else {
+        var status = data["images"][0]["transaction"]["status"];
+        if(status == "success"){
+          var name = 'doneRecog '+JSON.parse(body)["images"][0]["transaction"]["subject"];   //Sends recognized name with 'doneRecog' data to database when recognition is complete
+          ref.child("Read").set(name);
+        }
+        else if (status == "failure"){
+          ref.child("Read").set("Failed");                                                   //Sends fail to recognize data to the DB on completed request
+        }
+      }
+    },
+    error: function (xhr, status, error) {
+      console.log(status);
+      console.log(error);
+      ref.child("Read").set("Failed");
+    }
+  };
+  jQuery.ajax('https://api.kairos.com/recognize', options);
+
+
+  // jQuery.ajax('https://westus.api.cognitive.microsoft.com/face/v1.0/detect', {
+  //   headers: {
+  //     'Content-Type': 'application/octet-stream',
+  //     'Ocp-Apim-Subscription-Key': '3c876c12d0954e50975a7f0047e2c1dd',
+  //   },
+  //   method: 'post',
+  //   processData: false,
+  //   data: blob,
+  //   success: function(data, status, xhr) {
+  //     console.log(data);
+  //     console.log(status);
+  //
+  //     if (status == 'success' && data.length > 0) {
+  //
+  //       var faceData = data[0];
+  //
+  //       console.log(faceData);
+  //
+  //       var body = {
+  //         personGroupId: 'outtatheblues',
+  //         faceIds: [faceData.faceId]
+  //       };
+  //
+  //       jQuery.ajax('https://westus.api.cognitive.microsoft.com/face/v1.0/identify', {
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //           'Ocp-Apim-Subscription-Key': '3c876c12d0954e50975a7f0047e2c1dd',
+  //         },
+  //         contentType: "application/json",
+  //         method: 'post',
+  //         data: JSON.stringify(body),
+  //         dataType: 'json',
+  //         processData: false,
+  //         success: function (data, status, xhr) {
+  //           console.log(data);
+  //           console.log(status);
+  //
+  //           ref.child("Read").set("doneRecog Udit");
+  //         },
+  //         error: function (xhr, status, error) {
+  //           console.log(error);
+  //           console.log(status);
+  //
+  //           ref.child("Read").set("Failed");
+  //
+  //           setTimeout(function () {
+  //             var tracks = stream.getTracks();
+  //             for(var i = 0; i < tracks.length; i++) {
+  //               tracks[i].stop();
+  //             }
+  //           }, 1000);
+  //         }
+  //       });
+  //
+  //     } else {
+  //       ref.child("Read").set("noPerson");
+  //     }
+  //
+  //     setTimeout(function () {
+  //       var tracks = stream.getTracks();
+  //       for(var i = 0; i < tracks.length; i++) {
+  //         tracks[i].stop();
+  //       }
+  //     }, 1000);
+  //   },
+  //   error: function(xhr, status, error) {
+  //     console.log(error);
+  //     console.log(status);
+  //
+  //     ref.child("Read").set("noPerson");
+  //
+  //     setTimeout(function () {
+  //       var tracks = stream.getTracks();
+  //       for(var i = 0; i < tracks.length; i++) {
+  //         tracks[i].stop();
+  //       }
+  //     }, 1000);
+  //   }
+  // });
+}
+
+
+// Initialize Firebase
+// TODO: Replace with your project's customized code snippet
+var config = {
+  apiKey: "AIzaSyAAr-PydyLPmvAelN4wfDI04tPclIOqBSM",
+  authDomain: "scu-hackathons.firebaseapp.com",
+  databaseURL: "https://scu-hackathons.firebaseio.com",
+  storageBucket: "scu-hackathons.appspot.com",
+  messagingSenderId: "582430128541"
+};
+firebase.initializeApp(config);
+
+/* Local Database Access */
+var ref = firebase.database().ref("Alexa");
+
+/* The Raspberry Pi is always listening to the database to see if voice commands to Alexa are issued */
+ref.on("child_changed", function(snap) {
+  console.log("initial data loaded!", snap.key + ":", snap.val());
+  if (snap.val() == 'callFacialRecog') {                                              //After the Alexa application is triggered by onLaunch or DoorIntent
+    //Snaps a picture of whatever is in front of the door
+
+    // Get access to the camera!
+    if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      // Not adding `{ audio: true }` since we only want video now
+      navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+        video.src = window.URL.createObjectURL(stream);
+        video.play();
+
+        setTimeout(function() {
+          snapAlexaPhoto(stream);
+        }, 5000);
+      });
+    }
+    // Legacy code below: getUserMedia
+    else if(navigator.getUserMedia) { // Standard
+      navigator.getUserMedia({ video: true }, function(stream) {
+        video.src = stream;
+        video.play();
+
+        setTimeout(function() {
+          snapAlexaPhoto(stream);
+        }, 5000);
+      }, errBack);
+    } else if(navigator.webkitGetUserMedia) { // WebKit-prefixed
+      navigator.webkitGetUserMedia({ video: true }, function(stream){
+        video.src = window.webkitURL.createObjectURL(stream);
+        video.play();
+
+        setTimeout(function() {
+          snapAlexaPhoto(stream);
+        }, 5000);
+      }, errBack);
+    } else if(navigator.mozGetUserMedia) { // Mozilla-prefixed
+      navigator.mozGetUserMedia({ video: true }, function(stream){
+        video.src = window.URL.createObjectURL(stream);
+        video.play();
+
+        setTimeout(function() {
+          snapAlexaPhoto(stream);
+        }, 5000);
+      }, errBack);
+    }
+
+  } /* When Raspberry Pi reads that the Alexa wrote the facial traning indicator word to the database */
+  else if (snap.val() != null && snap.val().includes('callFacialTrain')) {
+    var base64 = canvas.toDataURL();
+    var blob = window.dataURLtoBlob(base64);
+
+    jQuery.post()
+  }
+
+});
