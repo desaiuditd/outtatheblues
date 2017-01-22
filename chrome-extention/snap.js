@@ -252,45 +252,46 @@ function findFaceFrame(data, timestamp) {
   chrome.storage.local.get('faceFrameData', function (items) {
     var faceFrameData = items.faceFrameData;
     if (!faceFrameData) {
-      faceFrameData = {'faceFrame': [], 'averageLength': 0, 'stdDevLength': 0, 'averageArea': 0, 'stdDevArea': 0};
-      // check for unusual behavior.
-
-      if (faceFrameData.faceFrame.length > 0) {
-        console.log(faceFrameData);
-        // check for alert condition.
-        if (Math.abs(faceFrameData.averageLength - faceFrames.lengthRatio) > faceFrameData.stdDevLength) {
-          alert += 1;
-        }
-        if (Math.abs(faceFrameData.averageArea - faceFrames.areaRatio) > faceFrameData.stdDevArea) {
-          alert += 1;
-        }
-        // Compute average. and std dev.
-        faceFrameData.averageLength = ((faceFrameData.averageLength * faceFrameData.averageLength.length)
-          + faceFrames.lengthRatio) / faceFrameData.averageLength.length + 1;
-        faceFrameData.averageArea = ((faceFrameData.averageArea * faceFrameData.averageArea.length)
-          + faceFrames.areaRatio) / faceFrameData.averageArea.length + 1;
-        var diffLength = 0;
-        var diffArea = 0;
-        _.each(faceFrameData.faceFrame, function (ele, index, list) {
-          var temp = faceFrameData.averageLength - ele.lengthRatio;
-          diffLength += temp * temp;
-          temp = faceFrameData.averageArea - ele.areaRatio;
-          diffArea += temp * temp;
-        });
-        faceFrameData.stdDevLength = Math.sqrt(diffLength);
-        faceFrameData.stdDevArea = Math.sqrt(diffArea);
-      }
-      faceFrameData.faceFrame[timestamp] = faceFrames;
-      faceFrameData.averageLength = faceFrames.lengthRatio;
-      faceFrameData.averageArea = faceFrames.areaRatio;
-      chrome.storage.local.set({faceFrameData: faceFrameData});
-      // create appropriate alert here. If needed.
-      if (alert > 0) {
-        // show a page. to be loaded.
-        alert('Critical');
-      }
+      faceFrameData = [{'faceFrame': [], 'averageLength': 0, 'stdDevLength': 0, 'averageArea': 0, 'stdDevArea': 0}];
     }
+    // check for unusual behavior.
+    console.log(faceFrameData);
+    if (faceFrameData[0].faceFrame.length > 0) {
+      // check for alert condition.
+      if (Math.abs(faceFrameData[0].averageLength - faceFrames.lengthRatio) > faceFrameData[0].stdDevLength) {
+        alert += 1;
+      }
+      if (Math.abs(faceFrameData[0].averageArea - faceFrames.areaRatio) > faceFrameData[0].stdDevArea) {
+        alert += 1;
+      }
+      // Compute average. and std dev.
+      faceFrameData[0].averageLength = ((faceFrameData[0].averageLength * faceFrameData[0].faceFrame.length)
+        + faceFrames.lengthRatio) / (faceFrameData[0].faceFrame.length + 1);
+      faceFrameData[0].averageArea = ((faceFrameData[0].averageArea * faceFrameData[0].faceFrame.length)
+        + faceFrames.areaRatio) / (faceFrameData[0].faceFrame.length + 1);
+      var diffLength = 0;
+      var diffArea = 0;
+      faceFrameData[0].faceFrame.forEach(function (entry) {
+        var temp = faceFrameData[0].averageLength - entry.lengthRatio;
+        diffLength += temp * temp;
+        temp = faceFrameData[0].averageArea - entry.areaRatio;
+        diffArea += temp * temp;
+      })
+      faceFrameData[0].stdDevLength = Math.sqrt(diffLength);
+      faceFrameData[0].stdDevArea = Math.sqrt(diffArea);
+    } else {
+      faceFrameData[0].averageLength = faceFrames.lengthRatio;
+      faceFrameData[0].averageArea = faceFrames.areaRatio;
+    }
+    faceFrameData[0].faceFrame.splice(timestamp, 0, faceFrames);
+    // faceFrameData.faceFrame[timestamp] = faceFrames;
+    chrome.storage.local.set({faceFrameData: faceFrameData});
+    // create appropriate alert here. If needed.
   });
+  if (alert > 0) {
+    // show a page. to be loaded.
+    alert('Critical');
+  }
   // if regression results are alerting, show a page with results and recommendations.
   console.log(faceFrames);
 }
