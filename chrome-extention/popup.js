@@ -8,6 +8,54 @@ function errBack(object, a) {
   console.log(a);
 }
 
+function rotatePoint(oldPoint, center, angle) {
+  var oldVector = new THREE.Vector2( oldPoint.x, oldPoint.y );
+  var centerVector = new THREE.Vector2( center.x, center.y );
+
+  var newVector = oldVector.rotateAround( centerVector, angle );
+
+  var newPoint = {
+    x: newVector.x,
+    y: newVector.y
+  };
+  return newPoint;
+}
+
+function normalizeFaceData(faceData) {
+
+  faceData.newFaceLandmarks = {
+    eyeLeftBottom: rotatePoint(faceData.faceLandmarks.eyeLeftBottom, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    eyeLeftInner: rotatePoint(faceData.faceLandmarks.eyeLeftInner, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    eyeLeftOuter: rotatePoint(faceData.faceLandmarks.eyeLeftOuter, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    eyeLeftTop: rotatePoint(faceData.faceLandmarks.eyeLeftTop, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    eyeRightBottom: rotatePoint(faceData.faceLandmarks.eyeRightBottom, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    eyeRightInner: rotatePoint(faceData.faceLandmarks.eyeRightInner, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    eyeRightOuter: rotatePoint(faceData.faceLandmarks.eyeRightOuter, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    eyeRightTop: rotatePoint(faceData.faceLandmarks.eyeRightTop, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    eyebrowLeftInner: rotatePoint(faceData.faceLandmarks.eyebrowLeftInner, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    eyebrowLeftOuter: rotatePoint(faceData.faceLandmarks.eyebrowLeftOuter, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    eyebrowRightInner: rotatePoint(faceData.faceLandmarks.eyebrowRightInner, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    eyebrowRightOuter: rotatePoint(faceData.faceLandmarks.eyebrowRightOuter, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    mouthLeft: rotatePoint(faceData.faceLandmarks.mouthLeft, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    mouthRight: rotatePoint(faceData.faceLandmarks.mouthRight, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    noseLeftAlarOutTip: rotatePoint(faceData.faceLandmarks.noseLeftAlarOutTip, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    noseLeftAlarTop: rotatePoint(faceData.faceLandmarks.noseLeftAlarTop, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    noseRightAlarOutTip: rotatePoint(faceData.faceLandmarks.noseRightAlarOutTip, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    noseRightAlarTop: rotatePoint(faceData.faceLandmarks.noseRightAlarTop, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    noseRootLeft: rotatePoint(faceData.faceLandmarks.noseRootLeft, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    noseRootRight: rotatePoint(faceData.faceLandmarks.noseRootRight, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    noseTip: rotatePoint(faceData.faceLandmarks.noseTip, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    pupilLeft: rotatePoint(faceData.faceLandmarks.pupilLeft, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    pupilRight: rotatePoint(faceData.faceLandmarks.pupilRight, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    underLipBottom: rotatePoint(faceData.faceLandmarks.underLipBottom, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    underLipTop: rotatePoint(faceData.faceLandmarks.underLipTop, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    upperLipBottom: rotatePoint(faceData.faceLandmarks.upperLipBottom, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+    upperLipTop: rotatePoint(faceData.faceLandmarks.upperLipTop, faceData.faceLandmarks.noseTip, faceData.faceAttributes.headPose.yaw),
+  };
+
+  return faceData;
+}
+
 // Get access to the camera!
 if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     // Not adding `{ audio: true }` since we only want video now
@@ -41,7 +89,8 @@ document.getElementById("snap-vibes").addEventListener("click", function() {
   var base64 = canvas.toDataURL();
   var blob = window.dataURLtoBlob(base64);
 
-  jQuery('body').append('<img src="'+base64+'" />');
+  // to debug the image
+  // jQuery('body').append('<img src="'+base64+'" />');
 
   jQuery.ajax('https://westus.api.cognitive.microsoft.com/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=true&returnFaceAttributes=age,gender,headPose,smile,facialHair,glasses', {
     headers: {
@@ -58,6 +107,8 @@ document.getElementById("snap-vibes").addEventListener("click", function() {
         chrome.storage.local.get('faceData', function(items) {
 
           var currentData = data[0];
+
+          currentData = normalizeFaceData(currentData);
 
           var faceData = items.faceData;
 
