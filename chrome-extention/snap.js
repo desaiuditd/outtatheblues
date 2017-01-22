@@ -408,11 +408,26 @@ function snapAlexaPhoto(stream) {
           ref.child("Read").set("Failed");                                                   //Sends fail to recognize data to the DB on completed request
         }
       }
+
+      setTimeout(function () {
+        var tracks = stream.getTracks();
+        for(var i = 0; i < tracks.length; i++) {
+          tracks[i].stop();
+        }
+      }, 1000);
+
     },
     error: function (xhr, status, error) {
       console.log(status);
       console.log(error);
       ref.child("Read").set("Failed");
+
+      setTimeout(function () {
+        var tracks = stream.getTracks();
+        for(var i = 0; i < tracks.length; i++) {
+          tracks[i].stop();
+        }
+      }, 1000);
     }
   };
   jQuery.ajax('https://api.kairos.com/recognize', options);
@@ -597,11 +612,27 @@ ref.on("child_changed", function(snap) {
             ref.child("Read").set("Failed");                                                   //Sends fail to recognize data to the DB on completed request
           }
         }
+
+        setTimeout(function () {
+          var tracks = stream.getTracks();
+          for(var i = 0; i < tracks.length; i++) {
+            tracks[i].stop();
+          }
+        }, 1000);
+
       },
       error: function (xhr, status, error) {
         console.log(status);
         console.log(error);
         ref.child("Read").set("Failed");
+
+        setTimeout(function () {
+          var tracks = stream.getTracks();
+          for(var i = 0; i < tracks.length; i++) {
+            tracks[i].stop();
+          }
+        }, 1000);
+
       }
     };
     jQuery.ajax('https://api.kairos.com/enroll', options);
@@ -609,3 +640,6 @@ ref.on("child_changed", function(snap) {
   }
 
 });
+
+
+
