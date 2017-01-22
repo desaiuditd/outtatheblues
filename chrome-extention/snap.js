@@ -83,6 +83,40 @@ function snapPhoto(stream) {
   var base64 = canvas.toDataURL();
   var blob = window.dataURLtoBlob(base64);
 
+  var type = "FACE_DETECTION";
+  // to debug the image
+  // jQuery('body').append('<img src="'+base64+'" />');
+  // instead of blob. content.replace("data:image/jpeg;base64,", "")
+  var json = '{' +
+    ' "requests": [' +
+    '	{ ' +
+    '	  "image": {' +
+    '	    "content":"' + base64.slice(22) + '"' +
+    '	  },' +
+    '	  "features": [' +
+    '	      {' +
+    '	      	"type": "' + type + '",' +
+    '			"maxResults": 20' +
+    '	      }' +
+    '	  ]' +
+    '	}' +
+    ']' +
+    '}';
+  jQuery.ajax('https://vision.googleapis.com/v1/images:annotate?fields=responses&key=AIzaSyDUVxulQRtAi4ThIlmf29mokkMeelGAzks', {
+    method: 'post',
+    headers: {
+      "Content-Type": "application/json",
+    },
+    dataType: 'json',
+    data: json,
+    success: function(data, textStatus, jqXHR) {
+      console.log(data);
+    },
+    error: function(jqXHR, textStatus, errorThrown) {
+      console.log('ERRORS: ' + textStatus + ' ' + JSON.stringify(errorThrown));
+    }
+  });
+
   jQuery.ajax('https://westus.api.cognitive.microsoft.com/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=true&returnFaceAttributes=age,gender,headPose,smile,facialHair,glasses', {
     headers: {
       'Content-Type': 'application/octet-stream',

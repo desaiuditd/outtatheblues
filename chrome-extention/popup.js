@@ -8,6 +8,45 @@ function errBack(object, a) {
   console.log(a);
 }
 
+function distance(point1, point2) {
+  var vector1 = new THREE.Vector2( point1.x, point1.y );
+  var vector2 = new THREE.Vector2( point2.x, point2.y );
+  var distance = vector1.distanceTo(vector2);
+  console.log(distance);
+  return distance;
+}
+
+function midPoint(point1, point2) {
+  var midpointX = (point1.x + point2.x)/2;
+  var midpointY = (point1.y + point2.y)/2;
+  console.log(midpointX, midpointY);
+  return {x: midpointX, y: midpointY};
+}
+
+function areaOfPolygon(vertices) {
+  // Vertices have to be in order.
+  var total = 0;
+
+  for (var i = 0, l = vertices.length; i < l; i++) {
+    var addX = vertices[i].x;
+    var addY = vertices[i == vertices.length - 1 ? 0 : i + 1].y;
+    var subX = vertices[i == vertices.length - 1 ? 0 : i + 1].x;
+    var subY = vertices[i].y;
+
+    total += (addX * addY * 0.5);
+    total -= (subX * subY * 0.5);
+  }
+  console.log(total);
+  return total;
+}
+function perimeterOfPolygon(vertices) {
+  var total = 0;
+  for (var i = 0; i < vertices.length - 1; i++) {
+    total += distance(vertices[i], vertices[i + 1]);
+  }
+  console.log(total);
+  return total;
+}
 function rotatePoint(oldPoint, center, angle) {
   var oldVector = new THREE.Vector2( oldPoint.x, oldPoint.y );
   var centerVector = new THREE.Vector2( center.x, center.y );
@@ -89,9 +128,56 @@ document.getElementById("snap-vibes").addEventListener("click", function() {
   var base64 = canvas.toDataURL();
   var blob = window.dataURLtoBlob(base64);
 
+  var type = "FACE_DETECTION";
   // to debug the image
-  // jQuery('body').append('<img src="'+base64+'" />');
+  jQuery('body').append('<img src="'+base64+'" />');
+  // instead of blob. content.replace("data:image/jpeg;base64,", "")
+  var json = '{' +
+    ' "requests": [' +
+    '	{ ' +
+    '	  "image": {' +
+    '	    "content":"' + base64.slice(22) + '"' +
+    '	  },' +
+    '	  "features": [' +
+    '	      {' +
+    '	      	"type": "' + type + '",' +
+    '			"maxResults": 200' +
+    '	      }' +
+    '	  ]' +
+    '	}' +
+    ']' +
+    '}';
+  jQuery.ajax('https://vision.googleapis.com/v1/images:annotate?fields=responses&key=AIzaSyDUVxulQRtAi4ThIlmf29mokkMeelGAzks', {
+    method: 'post',
+    headers: {
+      "Content-Type": "application/json",
+    },
+    dataType: 'json',
+    data: json,
+    success: function(data, textStatus, jqXHR) {
+      console.log(data);
+      var leftEar = data.responses[0].faceAnnotations[0].landmarks[28].position;
+      var rightEar = data.responses[0].faceAnnotations[0].landmarks[29].position;
 
+      var widthOfFace = distance(leftEar, rightEar);
+
+      var forehead = data.responses[0].faceAnnotations[0].landmarks[30].position;
+      var chin = data.responses[0].faceAnnotations[0].landmarks[31].position;
+
+      var lengthOfFace = distance(forehead, chin);
+
+      var chinLeft = data.responses[0].faceAnnotations[0].landmarks[32].position;
+      var chinRight = data.responses[0].faceAnnotations[0].landmarks[33].position;
+
+      var lowerWidthOfFace = distance(chinLeft, chinRight);
+
+      var faceFrameData = {'length': lengthOfFace, 'upperWidth': widthOfFace, 'lowerWidth': lowerWidthOfFace};
+    },
+    error: function(jqXHR, textStatus, errorThrown) {
+      console.log('ERRORS: ' + textStatus + ' ' + errorThrown);
+      alert('ERRORS: ' + textStatus);
+    }
+  });
   jQuery.ajax('https://westus.api.cognitive.microsoft.com/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=true&returnFaceAttributes=age,gender,headPose,smile,facialHair,glasses', {
     headers: {
       'Content-Type': 'application/octet-stream',
