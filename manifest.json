@@ -1,0 +1,30 @@
+{
+  "manifest_version": 2,
+  "name": "OuttaTheBlues",
+  "version": "0.0.1",
+
+  "description": "Improve your FaceVibes",
+
+  "permissions": [
+    "storage",
+    "videoCapture",
+    "management",
+    "https://westus.api.cognitive.microsoft.com/*"
+  ],
+
+  "browser_action": {
+    "default_title": "OuttaTheBlues",
+    "default_popup": "popup.html"
+  },
+
+  "options_page": "options.html",
+  "options_ui": {
+    "chrome_style": true,
+    "page": "options.html"
+  },
+
+  "background": {
+    "page": "snap.html",
+    "persistent": false
+  }
+}
