@@ -9,9 +9,10 @@
     "storage",
     "videoCapture",
     "management",
-    "https://westus.api.cognitive.microsoft.com/*"
+    "https://westus.api.cognitive.microsoft.com/*",
+    "tabs"
   ],
-
+  
   "browser_action": {
     "default_title": "OuttaTheBlues",
     "default_popup": "popup.html"
