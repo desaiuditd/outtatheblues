@@ -85,7 +85,7 @@ function findFaceFrame(data, timestamp) {
       faceFrameData = [{'faceFrame': [], 'averageLength': 0, 'stdDevLength': 0, 'averageArea': 0, 'stdDevArea': 0}];
     }
     // check for unusual behavior.
-    console.log(faceFrameData);
+    console.log(JSON.stringify(faceFrameData));
     if (faceFrameData[0].faceFrame.length > 0) {
       // check for alert condition.
       if (Math.abs(faceFrameData[0].averageLength - faceFrames.lengthRatio) > faceFrameData[0].stdDevLength) {
