@@ -567,7 +567,45 @@ ref.on("child_changed", function(snap) {
     var base64 = canvas.toDataURL();
     var blob = window.dataURLtoBlob(base64);
 
-    jQuery.post()
+    var options = {
+      headers:{
+        'Content-Type': 'application/json',
+        'app_id': '58e3e573',
+        'app_key': 'cec849b17e94729ce0c7fcde30467808'
+      },
+      data: JSON.stringify({
+        image: base64,                                              //After picture is taken, image data is set on the facial recognition API
+        subject_id: snap.val().substring(16),
+        gallery_name: 'hack-ucsc',
+        selector: 'SETPOSE',
+        symmetricFill: 'true'
+
+      }),
+      method: 'post',
+      dataType: 'json',
+      contentType: "application/json",
+      success: function(data, status, xhr) {
+        if (data.Errors) {
+          ref.child("Read").set("noPerson");
+        } else {
+          var status = data["images"][0]["transaction"]["status"];
+          if(status == "success"){
+            var name = 'doneRecog '+JSON.parse(body)["images"][0]["transaction"]["subject"];   //Sends recognized name with 'doneRecog' data to database when recognition is complete
+            ref.child("Read").set(name);
+          }
+          else if (status == "failure"){
+            ref.child("Read").set("Failed");                                                   //Sends fail to recognize data to the DB on completed request
+          }
+        }
+      },
+      error: function (xhr, status, error) {
+        console.log(status);
+        console.log(error);
+        ref.child("Read").set("Failed");
+      }
+    };
+    jQuery.ajax('https://api.kairos.com/enroll', options);
+
   }
 
 });
