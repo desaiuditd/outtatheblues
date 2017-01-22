@@ -172,6 +172,8 @@ document.getElementById("snap-vibes").addEventListener("click", function() {
       var lowerWidthOfFace = distance(chinLeft, chinRight);
 
       var faceFrameData = {'length': lengthOfFace, 'upperWidth': widthOfFace, 'lowerWidth': lowerWidthOfFace};
+      console.log(faceFrameData);
+      // Store it in chrome local storage.
     },
     error: function(jqXHR, textStatus, errorThrown) {
       console.log('ERRORS: ' + textStatus + ' ' + errorThrown);
