@@ -261,20 +261,8 @@ function findFaceFrame(data, timestamp) {
       if (Math.abs(faceFrameData[0].averageLength - faceFrames.lengthRatio) > faceFrameData[0].stdDevLength) {
         alert += 1;
       }
-<<<<<<< Updated upstream
       if (Math.abs(faceFrameData[0].averageArea - faceFrames.areaRatio) > faceFrameData[0].stdDevArea) {
         alert += 1;
-=======
-      faceFrameData.faceFrame[timestamp] = faceFrames;
-      faceFrameData.averageLength = faceFrames.lengthRatio;
-      faceFrameData.averageArea = faceFrames.areaRatio;
-      chrome.storage.local.set({faceFrameData: faceFrameData});
-      // create appropriate alert here. If needed.
-      if (alert > 0) {
-        // show a page. to be loaded.
-
-        alert('Critical');
->>>>>>> Stashed changes
       }
       // Compute average. and std dev.
       faceFrameData[0].averageLength = ((faceFrameData[0].averageLength * faceFrameData[0].faceFrame.length)
