@@ -5,11 +5,13 @@
 
   "description": "Improve your FaceVibes",
 
+  "content_security_policy":"script-src 'self' https://www.gstatic.com; object-src 'self' ",
   "permissions": [
     "storage",
     "videoCapture",
     "management",
     "https://westus.api.cognitive.microsoft.com/*",
+    "https://www.gstatic.com/*",
     "tabs"
   ],
   
