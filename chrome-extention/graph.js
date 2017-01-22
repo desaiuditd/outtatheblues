@@ -51,10 +51,10 @@ function createTable(items) {
     cell0.appendChild(document.createTextNode(i++));
     row.appendChild(cell0);
     var cell = document.createElement('td');
-    cell.appendChild(document.createTextNode(rowData.lengthRatio));
+    cell.appendChild(document.createTextNode(rowData.lengthRatio.toFixed(5)));
     row.appendChild(cell);
     var cell2 = document.createElement('td');
-    cell2.appendChild(document.createTextNode(rowData.areaRatio));
+    cell2.appendChild(document.createTextNode(rowData.areaRatio.toFixed(5)));
     row.appendChild(cell2);
     tableBody.appendChild(row);
   });
