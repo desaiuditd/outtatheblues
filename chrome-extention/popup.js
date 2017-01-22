@@ -39,6 +39,7 @@ function areaOfPolygon(vertices) {
   console.log(total);
   return total;
 }
+
 function perimeterOfPolygon(vertices) {
   var total = 0;
   for (var i = 0; i < vertices.length - 1; i++) {
@@ -47,6 +48,112 @@ function perimeterOfPolygon(vertices) {
   console.log(total);
   return total;
 }
+
+function findFaceFrame(data, timestamp) {
+  var leftEar = data.responses[0].faceAnnotations[0].landmarks[28].position;
+  var rightEar = data.responses[0].faceAnnotations[0].landmarks[29].position;
+
+  var widthOfFace = distance(leftEar, rightEar);
+
+  var forehead = data.responses[0].faceAnnotations[0].landmarks[30].position;
+  var chin = data.responses[0].faceAnnotations[0].landmarks[31].position;
+
+  var lengthOfFace = distance(forehead, chin);
+
+  var chinLeft = data.responses[0].faceAnnotations[0].landmarks[32].position;
+  var chinRight = data.responses[0].faceAnnotations[0].landmarks[33].position;
+
+  var lowerWidthOfFace = distance(chinLeft, chinRight);
+
+  var cheeksArea = findCheekArea(data);
+  // var of poly.
+  var pt1 = data.responses[0].faceAnnotations[0].boundingPoly.vertices[0];
+  var pt2 = data.responses[0].faceAnnotations[0].boundingPoly.vertices[1];
+  var len = distance(pt1, pt2);
+  var lengthRatio = (lengthOfFace * 3)/(widthOfFace + lowerWidthOfFace);
+  var areaRatio = (cheeksArea/(len * len))*100;
+  // check for status and see if previous data is nearby or not.
+  var faceFrames = {
+    'lengthRatio': lengthRatio,
+    'areaRatio': areaRatio
+  };
+  // store them in local storage.
+  var alert = 0;
+  chrome.storage.local.get('faceFrameData', function (items) {
+    var faceFrameData = items.faceFrameData;
+    if (!faceFrameData) {
+      faceFrameData = [{'faceFrame': [], 'averageLength': 0, 'stdDevLength': 0, 'averageArea': 0, 'stdDevArea': 0}];
+    }
+    // check for unusual behavior.
+    console.log(faceFrameData);
+    if (faceFrameData[0].faceFrame.length > 0) {
+      // check for alert condition.
+      if (Math.abs(faceFrameData[0].averageLength - faceFrames.lengthRatio) > faceFrameData[0].stdDevLength) {
+        alert += 1;
+      }
+      if (Math.abs(faceFrameData[0].averageArea - faceFrames.areaRatio) > faceFrameData[0].stdDevArea) {
+        alert += 1;
+      }
+      // Compute average. and std dev.
+      faceFrameData[0].averageLength = ((faceFrameData[0].averageLength * faceFrameData[0].faceFrame.length)
+        + faceFrames.lengthRatio) / (faceFrameData[0].faceFrame.length + 1);
+      faceFrameData[0].averageArea = ((faceFrameData[0].averageArea * faceFrameData[0].faceFrame.length)
+        + faceFrames.areaRatio) / (faceFrameData[0].faceFrame.length + 1);
+      var diffLength = 0;
+      var diffArea = 0;
+      faceFrameData[0].faceFrame.forEach(function (entry) {
+        var temp = faceFrameData[0].averageLength - entry.lengthRatio;
+        diffLength += temp * temp;
+        temp = faceFrameData[0].averageArea - entry.areaRatio;
+        diffArea += temp * temp;
+      })
+      faceFrameData[0].stdDevLength = Math.sqrt(diffLength);
+      faceFrameData[0].stdDevArea = Math.sqrt(diffArea);
+    } else {
+      faceFrameData[0].averageLength = faceFrames.lengthRatio;
+      faceFrameData[0].averageArea = faceFrames.areaRatio;
+    }
+    faceFrameData[0].faceFrame.splice(timestamp, 0, faceFrames);
+    // faceFrameData.faceFrame[timestamp] = faceFrames;
+    chrome.storage.local.set({faceFrameData: faceFrameData});
+    // create appropriate alert here. If needed.
+  });
+  if (alert > 0) {
+    // show a page. to be loaded.
+    alert('Critical');
+  }
+  // if regression results are alerting, show a page with results and recommendations.
+  console.log(faceFrames);
+}
+
+function findCheekArea(data) {
+  var leftEyeRC = data.responses[0].faceAnnotations[0].landmarks[17].position;
+  var leftEyeLC = data.responses[0].faceAnnotations[0].landmarks[19].position;
+  var leftEar = data.responses[0].faceAnnotations[0].landmarks[28].position;
+  var leftChin = data.responses[0].faceAnnotations[0].landmarks[32].position;
+  var leftMouth = data.responses[0].faceAnnotations[0].landmarks[10].position;
+  var leftNoseB = data.responses[0].faceAnnotations[0].landmarks[14].position;
+
+  var inputLeft = [];
+  inputLeft.push(leftEyeRC, leftEyeLC, leftEar, leftChin, leftMouth, leftNoseB);
+  var areaLeft = areaOfPolygon(inputLeft);
+
+  var rightEyeLC = data.responses[0].faceAnnotations[0].landmarks[24].position;
+  var rightEyeRC = data.responses[0].faceAnnotations[0].landmarks[22].position;
+  var rightEar = data.responses[0].faceAnnotations[0].landmarks[29].position;
+  var rightChin = data.responses[0].faceAnnotations[0].landmarks[33].position;
+  var rightMouth = data.responses[0].faceAnnotations[0].landmarks[11].position;
+  var rightNoseB = data.responses[0].faceAnnotations[0].landmarks[13].position;
+
+  var inputRight = [];
+  inputRight.push(rightEyeLC, rightEyeRC, rightEar, rightChin, rightMouth, rightNoseB);
+  var areaRight = areaOfPolygon(inputRight);
+
+  console.log(areaLeft);
+  console.log(areaRight);
+  return Math.max(Math.abs(areaLeft), Math.abs(areaRight));
+}
+
 function rotatePoint(oldPoint, center, angle) {
   var oldVector = new THREE.Vector2( oldPoint.x, oldPoint.y );
   var centerVector = new THREE.Vector2( center.x, center.y );
@@ -127,7 +234,7 @@ document.getElementById("snap-vibes").addEventListener("click", function() {
 
   var base64 = canvas.toDataURL();
   var blob = window.dataURLtoBlob(base64);
-
+  var timestamp = new Date().getTime();
   var type = "FACE_DETECTION";
   // to debug the image
   jQuery('body').append('<img src="'+base64+'" />');
@@ -141,7 +248,7 @@ document.getElementById("snap-vibes").addEventListener("click", function() {
     '	  "features": [' +
     '	      {' +
     '	      	"type": "' + type + '",' +
-    '			"maxResults": 200' +
+    '			"maxResults": 10' +
     '	      }' +
     '	  ]' +
     '	}' +
@@ -156,23 +263,7 @@ document.getElementById("snap-vibes").addEventListener("click", function() {
     data: json,
     success: function(data, textStatus, jqXHR) {
       console.log(data);
-      var leftEar = data.responses[0].faceAnnotations[0].landmarks[28].position;
-      var rightEar = data.responses[0].faceAnnotations[0].landmarks[29].position;
-
-      var widthOfFace = distance(leftEar, rightEar);
-
-      var forehead = data.responses[0].faceAnnotations[0].landmarks[30].position;
-      var chin = data.responses[0].faceAnnotations[0].landmarks[31].position;
-
-      var lengthOfFace = distance(forehead, chin);
-
-      var chinLeft = data.responses[0].faceAnnotations[0].landmarks[32].position;
-      var chinRight = data.responses[0].faceAnnotations[0].landmarks[33].position;
-
-      var lowerWidthOfFace = distance(chinLeft, chinRight);
-
-      var faceFrameData = {'length': lengthOfFace, 'upperWidth': widthOfFace, 'lowerWidth': lowerWidthOfFace};
-      console.log(faceFrameData);
+      var faceFrameData = findFaceFrame(data, timestamp);
       // Store it in chrome local storage.
     },
     error: function(jqXHR, textStatus, errorThrown) {
