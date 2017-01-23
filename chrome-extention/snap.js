@@ -390,7 +390,7 @@ function snapAlexaPhoto(stream) {
     },
     data: JSON.stringify({
       image: base64,                                              //After picture is taken, image data is set on the facial recognition API
-      gallery_name: 'hack-ucsc'
+      gallery_name: 'MyGallery'
     }),
     method: 'post',
     dataType: 'json',
@@ -591,7 +591,7 @@ ref.on("child_changed", function(snap) {
       data: JSON.stringify({
         image: base64,                                              //After picture is taken, image data is set on the facial recognition API
         subject_id: snap.val().substring(16),
-        gallery_name: 'hack-ucsc',
+        gallery_name: 'MyGallery',
         selector: 'SETPOSE',
         symmetricFill: 'true'
 

@@ -8,7 +8,12 @@
   <link rel="stylesheet" href="bootstrap-theme.min.css" />
   <style>
     body {
-      padding: 20px;
+      background-color: #eee ;
+    }
+
+    .navbar-brand img {
+      width: 70px;
+      margin-top: -5px;
     }
   </style>
 
@@ -17,15 +22,32 @@
 </head>
 
 <body>
+
+
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <a class="navbar-brand" href="#"><img src="logo.png" /></a>
+        <h4 class="text-center" style="margin-top: 15px;">Get Ouuta The Blues</h4>
+      </div>
+    </div>
+  </nav>
+
   <div class="container">
-    <div id="facedata-values"></div>
 
     <video id="video-vibes" width="320" height="240" autoplay></video>
+
     <br /><br />
+
     <button id="snap-vibes">Snap Photo</button>
     <button id="vibes"> View Report</button>
 
+    <br /><br />
+
     <canvas style="display:none" id="canvas-vibes" width="640" height="480"></canvas>
+
+    <div id="facedata-values"></div>
 
   </div>
   <script src="popup1.js"> </script>

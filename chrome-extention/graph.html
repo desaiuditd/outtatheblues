@@ -1,11 +1,39 @@
-<!DOCTYPE html>
-<html>
 <head>
+  <link rel="stylesheet" href="bootstrap.min.css" />
+  <link rel="stylesheet" href="bootstrap-theme.min.css" />
+  <style>
+    body {
+      background-color: #eee ;
+    }
+
+    .navbar-brand img {
+      width: 70px;
+      margin-top: -5px;
+    }
+  </style>
+</head>
+
+<body>
+
+
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <a class="navbar-brand" href="#"><img src="logo.png" /></a>
+      </div>
+      <h4 class="text-center">Get Ouuta The Blues</h4>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <div id="chart_div"></div>
+    <h1 class="text-center">Final Variations of Your Face</h1>
+
+  </div>
+
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js" ></script>
-    <script src="graph.js"></script>
- </head>
- <body>
-   <div id="chart_div" style="height: 50px; "></div>
- <h1 style="width: 100%; height: 80px; text-align: center">Final Variations of Your Face</h1>
- </body>
-</html>
+  <script src="graph.js"></script>
+
+</body>
